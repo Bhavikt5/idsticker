@@ -506,9 +506,12 @@ document.addEventListener('DOMContentLoaded', () => {
       dataModal.classList.remove('active');
     });
 
-    document.getElementById('btn-export-png').addEventListener('click', () => {
-      exportModal.classList.add('active');
-    });
+    const btnExpPng = document.getElementById('btn-export-png');
+    if (btnExpPng) {
+      btnExpPng.addEventListener('click', () => {
+        exportModal.classList.add('active');
+      });
+    }
     document.getElementById('btn-close-export-modal').addEventListener('click', () => {
       exportModal.classList.remove('active');
     });
