@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IT Asset Sticker Studio</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <!-- Remix Icons for crisp icons -->
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- External Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+</head>
+<body class="theme-dark">
+
+  <!-- Header Navigation -->
+  <header class="app-header">
+    <div class="logo-area">
+      <button id="btn-toggle-sidebar" class="btn-icon sidebar-toggle-btn" title="Toggle Controls Sidebar">
+        <i class="ri-menu-fold-line"></i>
+      </button>
+      <div class="logo-icon"><i class="ri-barcode-box-line"></i></div>
+      <div class="logo-text">
+        <h1>Asset Sticker Studio</h1>
+        <span>IT Tag & Serial Generator</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button id="btn-load-sample" class="btn btn-secondary">
+        <i class="ri-sparkles-line"></i> Load Sample Data
+      </button>
+
+      <button id="btn-toggle-table" class="btn btn-secondary">
+        <i class="ri-table-line"></i> View Data (<span id="data-count-badge">0</span>)
+      </button>
+
+      <div class="divider-v"></div>
+
+      <button id="btn-print" class="btn btn-outline">
+        <i class="ri-printer-line"></i> Print / PDF
+      </button>
+
+      <button id="btn-export-png" class="btn btn-primary">
+        <i class="ri-file-image-line"></i> Export PNGs
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Application Body -->
+  <div class="app-body">
+
+    <!-- Left Controls Sidebar -->
+    <aside class="sidebar" id="app-sidebar">
+      
+      <!-- Accordion 1: File & Mapping -->
+      <div class="panel-section active">
+        <div class="panel-header accordion-header">
+          <h3><i class="ri-file-excel-2-line"></i> Excel Data Source</h3>
+          <i class="ri-chevron-down-line chevron-icon"></i>
+        </div>
+        <div class="panel-content">
+          <div class="dropzone" id="excel-dropzone">
+            <input type="file" id="excel-file-input" accept=".xlsx, .xls, .csv" hidden>
+            <i class="ri-upload-cloud-2-line dropzone-icon"></i>
+            <p><strong>Click to upload</strong> or drag & drop</p>
+            <span class="sub-text">Supports .xlsx, .xls, .csv files</span>
+          </div>
+
+          <div class="column-mapping-group mt-3" id="mapping-container">
+            <label class="field-label">Map Excel Columns</label>
+            
+            <div class="form-row">
+              <span class="row-label"><i class="ri-user-3-line"></i> Host Name (Ref)</span>
+              <select id="map-host" class="select-input"></select>
+            </div>
+
+            <div class="form-row">
+              <span class="row-label"><i class="ri-price-tag-3-line"></i> Asset Tag</span>
+              <select id="map-asset" class="select-input"></select>
+            </div>
+
+            <div class="form-row">
+              <span class="row-label"><i class="ri-hashtag"></i> Serial Number</span>
+              <select id="map-serial" class="select-input"></select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Accordion 2: Spacing & Layout Adjuster -->
+      <div class="panel-section active">
+        <div class="panel-header accordion-header">
+          <h3><i class="ri-layout-grid-line"></i> Spacing & Grid Adjuster</h3>
+          <i class="ri-chevron-down-line chevron-icon"></i>
+        </div>
+        <div class="panel-content">
+
+          <!-- Spacer Controls -->
+          <div class="control-grouphighlight">
+            <div class="group-title"><i class="ri-space"></i> Block Spacing (Gaps)</div>
+            
+            <div class="range-control">
+              <div class="range-label">
+                <span>Horizontal Gap (Col Spacer)</span>
+                <span class="val-badge" id="val-col-gap">2 mm</span>
+              </div>
+              <input type="range" id="ctrl-col-gap" min="0" max="40" value="2" step="1">
+            </div>
+
+            <div class="range-control">
+              <div class="range-label">
+                <span>Vertical Gap (Row Spacer)</span>
+                <span class="val-badge" id="val-row-gap">4 mm</span>
+              </div>
+              <input type="range" id="ctrl-row-gap" min="0" max="50" value="4" step="1">
+            </div>
+
+            <div class="range-control">
+              <div class="range-label">
+                <span>Space Above Sticker Block</span>
+                <span class="val-badge" id="val-ref-gap">3 px</span>
+              </div>
+              <input type="range" id="ctrl-ref-gap" min="0" max="20" value="3" step="1">
+            </div>
+          </div>
+
+          <!-- Grid Columns & Block Dimensions -->
+          <div class="range-control mt-3">
+            <div class="range-label">
+              <span>Columns Per Row</span>
+              <span class="val-badge" id="val-grid-cols">4</span>
+            </div>
+            <input type="range" id="ctrl-grid-cols" min="1" max="8" value="4" step="1">
+          </div>
+
+          <div class="range-control">
+            <div class="range-label">
+              <span>Block Width</span>
+              <span class="val-badge" id="val-block-width">34 mm</span>
+            </div>
+            <input type="range" id="ctrl-block-width" min="15" max="150" value="34" step="1">
+          </div>
+
+          <div class="range-control">
+            <div class="range-label">
+              <span>Block Height</span>
+              <span class="val-badge" id="val-block-height">15 mm</span>
+            </div>
+            <input type="range" id="ctrl-block-height" min="10" max="80" value="15" step="1">
+          </div>
+
+          <div class="range-control">
+            <div class="range-label">
+              <span>Block Internal Padding</span>
+              <span class="val-badge" id="val-block-padding">5 px</span>
+            </div>
+            <input type="range" id="ctrl-block-padding" min="0" max="24" value="5" step="1">
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Accordion 3: Typography & Styling -->
+      <div class="panel-section active">
+        <div class="panel-header accordion-header">
+          <h3><i class="ri-font-size-2"></i> Typography & Styling</h3>
+          <i class="ri-chevron-down-line chevron-icon"></i>
+        </div>
+        <div class="panel-content">
+
+          <!-- Host Name (Ref Text) Settings -->
+          <div class="group-title"><i class="ri-user-line"></i> Ref Host Name (Outside Block)</div>
+          <div class="range-control">
+            <div class="range-label">
+              <span>Font Size</span>
+              <span class="val-badge" id="val-font-host">10 px</span>
+            </div>
+            <input type="range" id="ctrl-font-host" min="6" max="18" value="10" step="1">
+          </div>
+
+          <!-- Asset Tag Settings -->
+          <div class="group-title mt-2"><i class="ri-price-tag-line"></i> Asset Tag (Inside Block)</div>
+          <div class="range-control">
+            <div class="range-label">
+              <span>Font Size</span>
+              <span class="val-badge" id="val-font-asset">14 px</span>
+            </div>
+            <input type="range" id="ctrl-font-asset" min="8" max="28" value="14" step="1">
+          </div>
+
+          <!-- Serial Settings -->
+          <div class="group-title mt-2"><i class="ri-barcode-line"></i> Serial (Inside Block)</div>
+          <div class="range-control">
+            <div class="range-label">
+              <span>Font Size</span>
+              <span class="val-badge" id="val-font-serial">12 px</span>
+            </div>
+            <input type="range" id="ctrl-font-serial" min="8" max="24" value="12" step="1">
+          </div>
+
+          <!-- Alignment & Prefixes -->
+          <div class="form-row mt-3">
+            <span class="row-label">Text Align</span>
+            <div class="btn-group-toggle" id="align-toggle-group">
+              <button class="btn-toggle active" data-align="center"><i class="ri-align-center"></i></button>
+              <button class="btn-toggle" data-align="left"><i class="ri-align-left"></i></button>
+              <button class="btn-toggle" data-align="right"><i class="ri-align-right"></i></button>
+            </div>
+          </div>
+
+          <div class="form-row mt-2">
+            <span class="row-label">Host Prefix</span>
+            <input type="text" id="ctrl-prefix-host" class="text-input" placeholder="e.g. Host: " value="Host: ">
+          </div>
+
+          <div class="form-row mt-2">
+            <span class="row-label">Serial Prefix</span>
+            <input type="text" id="ctrl-prefix-serial" class="text-input" placeholder="e.g. S/N: " value="S/N: ">
+          </div>
+
+          <!-- Border Style -->
+          <div class="form-row mt-3">
+            <span class="row-label">Block Border</span>
+            <select id="ctrl-border-style" class="select-input">
+              <option value="solid-thin" selected>Solid Thin (1px)</option>
+              <option value="solid-thick">Solid Medium (2px)</option>
+              <option value="dashed">Dashed Cut-Line</option>
+              <option value="rounded">Rounded Corners</option>
+              <option value="none">No Border</option>
+            </select>
+          </div>
+
+          <div class="form-row mt-2">
+            <span class="row-label">Barcode Tag</span>
+            <select id="ctrl-barcode-toggle" class="select-input">
+              <option value="none" selected>None (Text Only)</option>
+              <option value="asset">Barcode for Asset Tag</option>
+              <option value="serial">Barcode for Serial</option>
+            </select>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Accordion 4: Page Setup -->
+      <div class="panel-section active">
+        <div class="panel-header accordion-header">
+          <h3><i class="ri-page-separator"></i> Page Setup & Print Bounds</h3>
+          <i class="ri-chevron-down-line chevron-icon"></i>
+        </div>
+        <div class="panel-content">
+          <div class="form-row">
+            <span class="row-label">Sheet Paper Size</span>
+            <select id="ctrl-page-size" class="select-input">
+              <option value="A4" selected>A4 (210 x 297 mm)</option>
+              <option value="Letter">Letter (8.5 x 11 in)</option>
+              <option value="Continuous">Continuous Roll / Grid View</option>
+            </select>
+          </div>
+
+          <div class="range-control mt-2">
+            <div class="range-label">
+              <span>Page Margin</span>
+              <span class="val-badge" id="val-page-margin">10 mm</span>
+            </div>
+            <input type="range" id="ctrl-page-margin" min="0" max="30" value="10" step="1">
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Main Workspace / Preview Canvas -->
+    <main class="canvas-workspace">
+      
+      <!-- Toolbar above canvas -->
+      <div class="canvas-toolbar">
+        <div class="toolbar-left">
+          <span class="status-indicator"><i class="ri-checkbox-circle-fill"></i> Ready</span>
+          <span class="count-summary" id="count-summary">Showing 0 stickers</span>
+        </div>
+
+        <div class="toolbar-center">
+          <div class="zoom-controls">
+            <button id="btn-zoom-out" title="Zoom Out"><i class="ri-zoom-out-line"></i></button>
+            <span id="zoom-value">100%</span>
+            <button id="btn-zoom-in" title="Zoom In"><i class="ri-zoom-in-line"></i></button>
+            <button id="btn-zoom-reset" title="Reset Zoom"><i class="ri-aspect-ratio-line"></i></button>
+          </div>
+        </div>
+
+        <div class="toolbar-right">
+          <label class="toggle-switch" title="Toggle cut mark lines on paper">
+            <input type="checkbox" id="toggle-cut-marks">
+            <span class="slider"></span>
+            <span class="toggle-text">Cut Guides</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Printable / Scalable Paper Container -->
+      <div class="paper-viewport" id="paper-viewport">
+        <div class="paper-sheet" id="paper-sheet">
+          <div class="sticker-grid" id="sticker-grid">
+            <!-- Sticker Blocks will be rendered here dynamically -->
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- Data Table Drawer / Modal -->
+  <div class="modal-overlay" id="data-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2><i class="ri-table-2"></i> Loaded Excel Records</h2>
+        <button class="btn-icon" id="btn-close-modal"><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-container">
+          <table class="data-table" id="excel-data-table">
+            <thead>
+              <tr id="table-head-row">
+                <th>#</th>
+                <th>Host Name</th>
+                <th>Asset Tag</th>
+                <th>Serial Number</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="table-body-rows">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PNG Export Modal -->
+  <div class="modal-overlay" id="export-modal">
+    <div class="modal-card modal-sm">
+      <div class="modal-header">
+        <h2><i class="ri-download-cloud-line"></i> Export PNG Options</h2>
+        <button class="btn-icon" id="btn-close-export-modal"><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3">Select how you would like to download your generated sticker PNG images:</p>
+        
+        <div class="export-options-list">
+          <button class="export-option-card" id="btn-exp-sheet-png">
+            <div class="opt-icon"><i class="ri-file-image-line"></i></div>
+            <div class="opt-info">
+              <strong>Full Sticker Sheet PNG</strong>
+              <span>Download the entire sheet containing all stickers as a high-res image</span>
+            </div>
+          </button>
+
+          <button class="export-option-card" id="btn-exp-zip-png">
+            <div class="opt-icon"><i class="ri-folder-zip-line"></i></div>
+            <div class="opt-info">
+              <strong>ZIP of Individual Sticker PNGs</strong>
+              <span>Export each sticker as a standalone PNG file packaged in a ZIP archive</span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main JavaScript File -->
+  <script src="app.js"></script>
+</body>
+</html>

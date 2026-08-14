@@ -1,0 +1,904 @@
+/* ==========================================================================
+   IT Asset Sticker Studio - Main Stylesheet
+   ========================================================================== */
+
+/* Modern CSS Reset & Tokens */
+:root {
+  --bg-dark: #0f172a;
+  --bg-card: #1e293b;
+  --bg-card-hover: #334155;
+  --bg-input: #0f172a;
+  --border-color: #334155;
+  --border-focus: #3b82f6;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-light: rgba(59, 130, 246, 0.15);
+  
+  --accent: #10b981;
+  --accent-hover: #059669;
+
+  --sticker-bg: #ffffff;
+  --sticker-text: #0f172a;
+  --sticker-border: #0f172a;
+  --sticker-ref-text: #475569;
+
+  --sidebar-width: 380px;
+  --header-height: 64px;
+  
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==========================================================================
+   Header Bar
+   ========================================================================== */
+.app-header {
+  height: var(--header-height);
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  z-index: 20;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.logo-text h1 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+}
+
+.logo-text span {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: block;
+  margin-top: -2px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.divider-v {
+  width: 1px;
+  height: 24px;
+  background-color: var(--border-color);
+  margin: 0 0.25rem;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: #ffffff;
+}
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.btn-secondary {
+  background-color: var(--bg-card-hover);
+  color: var(--text-main);
+  border-color: var(--border-color);
+}
+.btn-secondary:hover {
+  background-color: #475569;
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--text-main);
+  border-color: var(--border-color);
+}
+.btn-outline:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: var(--text-muted);
+}
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 6px;
+  transition: color 0.2s;
+}
+.btn-icon:hover {
+  color: var(--text-main);
+}
+
+/* ==========================================================================
+   App Body & Layout
+   ========================================================================== */
+.app-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  height: calc(100vh - var(--header-height));
+}
+
+/* Sidebar Panel */
+.sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background-color: var(--bg-card);
+  border-right: 1px solid var(--border-color);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* Custom Scrollbar for Sidebar */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+.sidebar::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+.panel-section {
+  background-color: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+}
+
+.panel-section:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.panel-header {
+  padding: 0.85rem 1rem;
+  background-color: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.accordion-header {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.accordion-header h3 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+.chevron-icon {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  transition: transform 0.25s ease;
+  pointer-events: none;
+}
+
+/* Collapsed State */
+.panel-section:not(.active) .panel-content {
+  display: none;
+}
+
+.panel-section:not(.active) .panel-header {
+  border-bottom: none;
+}
+
+.panel-section:not(.active) .chevron-icon {
+  transform: rotate(-90deg);
+}
+
+.panel-content {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.sidebar-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.25rem;
+}
+
+/* Dropzone */
+.dropzone {
+  border: 2px dashed var(--border-color);
+  border-radius: 8px;
+  padding: 1.25rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  background-color: var(--bg-input);
+  transition: all 0.2s ease;
+}
+
+.dropzone:hover, .dropzone.dragover {
+  border-color: var(--primary);
+  background-color: var(--primary-light);
+}
+
+.dropzone-icon {
+  font-size: 2rem;
+  color: var(--primary);
+  margin-bottom: 0.25rem;
+  display: block;
+}
+
+.dropzone p {
+  font-size: 0.85rem;
+  color: var(--text-main);
+}
+
+.dropzone .sub-text {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  display: block;
+  margin-top: 0.25rem;
+}
+
+/* Form Controls & Range Sliders */
+.field-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.form-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.row-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.select-input, .text-input {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-main);
+  padding: 0.4rem 0.6rem;
+  font-size: 0.825rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+  min-width: 140px;
+}
+
+.select-input:focus, .text-input:focus {
+  border-color: var(--border-focus);
+}
+
+.control-grouphighlight {
+  background-color: rgba(59, 130, 246, 0.06);
+  border: 1px dashed rgba(59, 130, 246, 0.35);
+  border-radius: 8px;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.group-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.range-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.range-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--text-main);
+}
+
+.val-badge {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--primary);
+  background: var(--bg-input);
+  height: 6px;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+/* Button Group Toggle */
+.btn-group-toggle {
+  display: flex;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.btn-toggle {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.btn-toggle.active {
+  background-color: var(--primary);
+  color: #fff;
+}
+
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 0.75rem; }
+.mb-3 { margin-bottom: 0.75rem; }
+
+/* Mobile & Small Window Responsive Styles */
+@media (max-width: 900px) {
+  .sidebar {
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    bottom: 0;
+    z-index: 50;
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+    width: 320px;
+    transform: translateX(-100%);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .header-actions {
+    gap: 0.35rem;
+  }
+
+  .btn {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* ==========================================================================
+   Canvas & Viewport
+   ========================================================================== */
+.canvas-workspace {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #0b0f19;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+}
+
+.canvas-toolbar {
+  height: 48px;
+  background-color: rgba(30, 41, 59, 0.8);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  z-index: 10;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.825rem;
+}
+
+.status-indicator {
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 500;
+}
+
+.count-summary {
+  color: var(--text-muted);
+}
+
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.15rem;
+}
+
+.zoom-controls button {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zoom-controls button:hover {
+  color: var(--text-main);
+  background-color: var(--bg-card-hover);
+}
+
+#zoom-value {
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  padding: 0 0.5rem;
+  min-width: 48px;
+  text-align: center;
+  color: var(--text-main);
+}
+
+.toggle-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.toggle-switch input {
+  display: none;
+}
+
+.slider {
+  width: 34px;
+  height: 18px;
+  background-color: var(--border-color);
+  border-radius: 18px;
+  position: relative;
+  transition: 0.3s;
+}
+
+.slider::before {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  left: 2px;
+  top: 2px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.toggle-switch input:checked + .slider {
+  background-color: var(--primary);
+}
+
+.toggle-switch input:checked + .slider::before {
+  transform: translateX(16px);
+}
+
+.toggle-text {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Paper Viewport & Printable Sheet */
+.paper-viewport {
+  flex: 1;
+  overflow: auto;
+  padding: 2.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.paper-sheet {
+  background-color: #ffffff;
+  color: #000000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  transform-origin: top center;
+  transition: transform 0.15s ease-out;
+  padding: 10mm;
+  min-height: 297mm;
+  width: 210mm; /* Default A4 width */
+  box-sizing: border-box;
+}
+
+/* Sticker Grid Container */
+.sticker-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12mm 10mm; /* Row gap, Col gap */
+  align-items: start;
+}
+
+/* ==========================================================================
+   Sticker Item Layout (Target Output Matching)
+   ========================================================================== */
+
+/* Main Cell Box for Single Sticker Item */
+.sticker-item-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;
+  page-break-inside: avoid;
+  break-inside: avoid;
+  padding: 8px 4px;
+  border: 1px dashed #e2e8f0; /* Crisp grid cut border like reference image */
+  border-radius: 2px;
+  box-sizing: border-box;
+  background-color: #ffffff;
+}
+
+.paper-sheet:not(.show-cut-marks) .sticker-item-wrapper {
+  border-color: #f1f5f9; /* Subtle light grid lines when cut marks off */
+}
+
+.paper-sheet.show-cut-marks .sticker-item-wrapper {
+  border-color: #94a3b8; /* Clearer grid lines when cut marks on */
+}
+
+/* 1. Outside & Above: Host Name Reference */
+.sticker-ref-host {
+  font-family: var(--font-family);
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569; /* Slate gray reference text */
+  margin-bottom: 5px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  line-height: 1.2;
+}
+
+/* 2. Sticker Block (Bordered Container) */
+.sticker-block {
+  width: 34mm;
+  height: 15mm;
+  background-color: #ffffff;
+  border: 1.5px solid #0f172a; /* Clean solid border box matching screenshot */
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  text-align: center;
+  position: relative;
+  border-radius: 1px;
+}
+
+/* Sticker Content: Asset Tag & Serial stacked vertically */
+.sticker-asset-tag {
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+  letter-spacing: 0.3px;
+  word-break: break-word;
+}
+
+.sticker-serial-number {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.2;
+  margin-top: 4px;
+  letter-spacing: 0.5px;
+  word-break: break-word;
+}
+
+.sticker-barcode-svg {
+  max-width: 90%;
+  height: 24px;
+  margin-top: 2px;
+}
+
+/* Border Styles Options */
+.sticker-block.border-solid-thin { border: 1px solid #0f172a; }
+.sticker-block.border-solid-thick { border: 2px solid #0f172a; }
+.sticker-block.border-dashed { border: 1.5px dashed #0f172a; }
+.sticker-block.border-rounded { border: 1.5px solid #0f172a; border-radius: 6px; }
+.sticker-block.border-none { border: none; }
+
+/* ==========================================================================
+   Modals & Tables
+   ========================================================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 850px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+  overflow: hidden;
+}
+
+.modal-card.modal-sm {
+  max-width: 480px;
+}
+
+.modal-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-body {
+  padding: 1.25rem;
+  overflow-y: auto;
+}
+
+/* Table Styling */
+.table-container {
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.85rem;
+}
+
+.data-table th, .data-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.data-table th {
+  background-color: var(--bg-input);
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.data-table tr:hover {
+  background-color: var(--bg-card-hover);
+}
+
+/* Export Cards */
+.export-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.export-option-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-main);
+  transition: all 0.2s ease;
+}
+
+.export-option-card:hover {
+  border-color: var(--primary);
+  background-color: var(--primary-light);
+}
+
+.export-option-card .opt-icon {
+  font-size: 1.75rem;
+  color: var(--primary);
+}
+
+.export-option-card .opt-info strong {
+  display: block;
+  font-size: 0.95rem;
+  margin-bottom: 0.2rem;
+}
+
+.export-option-card .opt-info span {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ==========================================================================
+   Print CSS (@media print)
+   ========================================================================== */
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  .app-header,
+  .sidebar,
+  .canvas-toolbar,
+  .modal-overlay {
+    display: none !important;
+  }
+
+  .app-body {
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  .canvas-workspace {
+    background-color: transparent !important;
+    overflow: visible !important;
+  }
+
+  .paper-viewport {
+    padding: 0 !important;
+    overflow: visible !important;
+    transform: none !important;
+  }
+
+  .paper-sheet {
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    min-height: auto !important;
+    transform: none !important;
+  }
+
+  @page {
+    margin: 10mm;
+    size: auto;
+  }
+}
