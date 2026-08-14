@@ -8,27 +8,27 @@ document.addEventListener('DOMContentLoaded', () => {
   // Sample Data (Based on User Screenshot)
   // ==========================================
   const SAMPLE_DATA = [
-    { "SN": 165, "Asset Tag": "RFCPL-LT-004", "Serial": "9CFLC44", "Host Name": "Akhil Balakrishnan", "Department": "Treasury" },
-    { "SN": 268, "Asset Tag": "RFCPL-LT-406", "Serial": "BM5NQ74", "Host Name": "Nikhil Sandav", "Department": "Treasury" },
-    { "SN": 405, "Asset Tag": "RFCPL-LT-548", "Serial": "LQ261399NM", "Host Name": "Anshuman", "Department": "Technology" },
-    { "SN": 220, "Asset Tag": "RFCPL-LT-0360", "Serial": "CQYY792V3X", "Host Name": "Ashutosh Mishra", "Department": "Technology" },
-    { "SN": 332, "Asset Tag": "RFCPL-LT-472", "Serial": "MJ4V6LF40N", "Host Name": "Bharat Rathore", "Department": "Technology" },
-    { "SN": 455, "Asset Tag": "RFCPL-LT-601", "Serial": "DX005ZJL", "Host Name": "Bhavya Momaya", "Department": "Technology" },
-    { "SN": 520, "Asset Tag": "RFCPL-LT-219", "Serial": "PG02XXTD", "Host Name": "danish shaikh", "Department": "Technology" },
-    { "SN": 155, "Asset Tag": "RFCPL-LT-170", "Serial": "DGM2B24", "Host Name": "Devanand Giri", "Department": "Technology" },
-    { "SN": 262, "Asset Tag": "RFCPL-MAC-400", "Serial": "KM96951216", "Host Name": "Divit Rao", "Department": "Technology" },
-    { "SN": 199, "Asset Tag": "RFCPL-LT-093", "Serial": "L9YR7HLX22", "Host Name": "Gourav Dangi", "Department": "Technology" },
-    { "SN": 243, "Asset Tag": "RFCPL-LT-399", "Serial": "PF58Y3DA", "Host Name": "Harshal dalvi", "Department": "Technology" },
-    { "SN": 581, "Asset Tag": "RFCPL-LT-358", "Serial": "M5YWXKR2JV", "Host Name": "Kamalkant Maharana", "Department": "Technology" },
-    { "SN": 411, "Asset Tag": "RFCPL-LT-557", "Serial": "L6D3HF161H", "Host Name": "Karthik D", "Department": "Technology" },
-    { "SN": 304, "Asset Tag": "RFCPL-LT-469", "Serial": "3D3BR24", "Host Name": "Mohammed Ussaid", "Department": "Technology" },
-    { "SN": 76,  "Asset Tag": "RFCPL-LT-229", "Serial": "GLHSFX3", "Host Name": "Nikhil Kothakota", "Department": "Technology" },
-    { "SN": 122, "Asset Tag": "RFCPL-LT-141", "Serial": "3BM2B24", "Host Name": "Nikhilesh Thakur", "Department": "Technology" },
-    { "SN": 241, "Asset Tag": "RFCPL-LT-392", "Serial": "J73TL00XHW", "Host Name": "Nilesh Joge", "Department": "Technology" },
-    { "SN": 88,  "Asset Tag": "RFCPL-LT-098", "Serial": "HRW17J9FG4", "Host Name": "Pooja Patel", "Department": "Technology" },
-    { "SN": 263, "Asset Tag": "RFCPL-LT-401", "Serial": "JPX21C799H", "Host Name": "Pratish Srivastava", "Department": "Technology" },
-    { "SN": 77,  "Asset Tag": "RFCPL-LT-232", "Serial": "PF3B2M53", "Host Name": "Prince Kumar", "Department": "Technology" },
-    { "SN": 264, "Asset Tag": "RFCPL-MAC-402", "Serial": "KHQH701Q0J", "Host Name": "Raj Shetye", "Department": "Technology" }
+    { "SN": 165, "Hostname": "RFCPL-LT-004", "Serial": "9CFLC44", "Employee Name": "Akhil Balakrishnan", "Department": "Treasury" },
+    { "SN": 268, "Hostname": "RFCPL-LT-406", "Serial": "BM5NQ74", "Employee Name": "Nikhil Sandav", "Department": "Treasury" },
+    { "SN": 405, "Hostname": "RFCPL-LT-548", "Serial": "LQ261399NM", "Employee Name": "Anshuman", "Department": "Technology" },
+    { "SN": 220, "Hostname": "RFCPL-LT-0360", "Serial": "CQYY792V3X", "Employee Name": "Ashutosh Mishra", "Department": "Technology" },
+    { "SN": 332, "Hostname": "RFCPL-LT-472", "Serial": "MJ4V6LF40N", "Employee Name": "Bharat Rathore", "Department": "Technology" },
+    { "SN": 455, "Hostname": "RFCPL-LT-601", "Serial": "DX005ZJL", "Employee Name": "Bhavya Momaya", "Department": "Technology" },
+    { "SN": 520, "Hostname": "RFCPL-LT-219", "Serial": "PG02XXTD", "Employee Name": "danish shaikh", "Department": "Technology" },
+    { "SN": 155, "Hostname": "RFCPL-LT-170", "Serial": "DGM2B24", "Employee Name": "Devanand Giri", "Department": "Technology" },
+    { "SN": 262, "Hostname": "RFCPL-MAC-400", "Serial": "KM96951216", "Employee Name": "Divit Rao", "Department": "Technology" },
+    { "SN": 199, "Hostname": "RFCPL-LT-093", "Serial": "L9YR7HLX22", "Employee Name": "Gourav Dangi", "Department": "Technology" },
+    { "SN": 243, "Hostname": "RFCPL-LT-399", "Serial": "PF58Y3DA", "Employee Name": "Harshal dalvi", "Department": "Technology" },
+    { "SN": 581, "Hostname": "RFCPL-LT-358", "Serial": "M5YWXKR2JV", "Employee Name": "Kamalkant Maharana", "Department": "Technology" },
+    { "SN": 411, "Hostname": "RFCPL-LT-557", "Serial": "L6D3HF161H", "Employee Name": "Karthik D", "Department": "Technology" },
+    { "SN": 304, "Hostname": "RFCPL-LT-469", "Serial": "3D3BR24", "Employee Name": "Mohammed Ussaid", "Department": "Technology" },
+    { "SN": 76,  "Hostname": "RFCPL-LT-229", "Serial": "GLHSFX3", "Employee Name": "Nikhil Kothakota", "Department": "Technology" },
+    { "SN": 122, "Hostname": "RFCPL-LT-141", "Serial": "3BM2B24", "Employee Name": "Nikhilesh Thakur", "Department": "Technology" },
+    { "SN": 241, "Hostname": "RFCPL-LT-392", "Serial": "J73TL00XHW", "Employee Name": "Nilesh Joge", "Department": "Technology" },
+    { "SN": 88,  "Hostname": "RFCPL-LT-098", "Serial": "HRW17J9FG4", "Employee Name": "Pooja Patel", "Department": "Technology" },
+    { "SN": 263, "Hostname": "RFCPL-LT-401", "Serial": "JPX21C799H", "Employee Name": "Pratish Srivastava", "Department": "Technology" },
+    { "SN": 77,  "Hostname": "RFCPL-LT-232", "Serial": "PF3B2M53", "Employee Name": "Prince Kumar", "Department": "Technology" },
+    { "SN": 264, "Hostname": "RFCPL-MAC-402", "Serial": "KHQH701Q0J", "Employee Name": "Raj Shetye", "Department": "Technology" }
   ];
 
   // ==========================================
@@ -47,16 +47,16 @@ document.addEventListener('DOMContentLoaded', () => {
       rowGap: 4,        // mm (4 mm gap)
       refGap: 3,        // px (3 px space above block)
       gridCols: 4,      // 4 columns per row
-      blockWidth: 34,   // mm (34 mm block width)
-      blockHeight: 15,  // mm (15 mm block height)
-      blockPadding: 5,  // px (5 px block padding)
-      fontHost: 10,     // px
+      blockWidth: 44,   // mm (44 mm block width)
+      blockHeight: 13,  // mm (13 mm block height)
+      blockPadding: 2,  // px (2 px block padding)
+      fontHost: 7,      // px
       fontAsset: 14,    // px
-      fontSerial: 12,   // px
+      fontSerial: 11,   // px
       textAlign: 'center',
-      prefixHost: 'Host: ',
-      prefixSerial: 'S/N: ',
-      borderStyle: 'solid-thin',
+      prefixHost: 'Host:',
+      prefixSerial: 'S/N:',
+      borderStyle: 'rounded',
       barcodeToggle: 'none',
       pageSize: 'A4',
       pageMargin: 10    // mm
@@ -163,10 +163,10 @@ document.addEventListener('DOMContentLoaded', () => {
   function autoDetectColumns() {
     state.columns.forEach(col => {
       const lower = col.toLowerCase().trim();
-      if (lower.includes('host') || lower.includes('name') || lower.includes('user') || lower.includes('assigned')) {
+      if (lower.includes('employee') || lower.includes('user') || lower.includes('assigned') || (lower.includes('host') && lower.includes('name'))) {
         state.mappings.host = col;
         mapHostSelect.value = col;
-      } else if (lower.includes('asset') || lower.includes('tag') || lower.includes('code')) {
+      } else if (lower === 'hostname' || lower.includes('asset') || lower.includes('tag') || lower.includes('code')) {
         state.mappings.asset = col;
         mapAssetSelect.value = col;
       } else if (lower.includes('serial') || lower.includes('sn') || lower.includes('s/n') || lower.includes('service')) {
@@ -227,6 +227,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const assetVal = state.mappings.asset ? (row[state.mappings.asset] || '') : '';
       const serialVal = state.mappings.serial ? (row[state.mappings.serial] || '') : '';
 
+      const pHost = state.config.prefixHost ? (state.config.prefixHost.endsWith(' ') ? state.config.prefixHost : state.config.prefixHost + ' ') : '';
+      const pSerial = state.config.prefixSerial ? (state.config.prefixSerial.endsWith(' ') ? state.config.prefixSerial : state.config.prefixSerial + ' ') : '';
+
       // Outer Wrapper
       const itemWrapper = document.createElement('div');
       itemWrapper.className = 'sticker-item-wrapper';
@@ -236,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
       refHostEl.className = 'sticker-ref-host';
       refHostEl.style.fontSize = `${state.config.fontHost}px`;
       refHostEl.style.marginBottom = `${state.config.refGap}px`;
-      refHostEl.textContent = state.config.prefixHost + hostVal;
+      refHostEl.textContent = pHost + hostVal;
 
       // 2. Sticker Block (Bordered Box)
       const blockEl = document.createElement('div');
@@ -256,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const serialEl = document.createElement('div');
       serialEl.className = 'sticker-serial-number';
       serialEl.style.fontSize = `${state.config.fontSerial}px`;
-      serialEl.textContent = state.config.prefixSerial + serialVal;
+      serialEl.textContent = pSerial + serialVal;
 
       blockEl.appendChild(assetEl);
       blockEl.appendChild(serialEl);
