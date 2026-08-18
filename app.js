@@ -495,8 +495,450 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.readAsArrayBuffer(file);
   }
 
+  // Helper for XML escaping
+  function escapeXML(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+  }
+
   // ==========================================
-  // Modal & Export Functionality
+  // SVG Vector Generator Engine
+  // ==========================================
+  function generateFullSheetSVG() {
+    if (!state.dataset || state.dataset.length === 0) return '';
+
+    const MM_TO_PX = 3.7795275591; // 96 DPI conversion
+
+    // Config parameters
+    const pageMarginMm = state.config.pageMargin;
+    const gridCols = state.config.gridCols;
+    const colGapMm = state.config.colGap;
+    const rowGapMm = state.config.rowGap;
+    const blockWidthMm = state.config.blockWidth;
+    const blockHeightMm = state.config.blockHeight;
+
+    const fontHostPx = state.config.fontHost;
+    const fontAssetPx = state.config.fontAsset;
+    const fontSerialPx = state.config.fontSerial;
+    const refGapPx = state.config.refGap;
+    const blockPaddingPx = state.config.blockPadding;
+
+    const pageMarginPx = pageMarginMm * MM_TO_PX;
+    const colGapPx = colGapMm * MM_TO_PX;
+    const rowGapPx = rowGapMm * MM_TO_PX;
+    const blockWidthPx = blockWidthMm * MM_TO_PX;
+    const blockHeightPx = blockHeightMm * MM_TO_PX;
+
+    const refHostHeightPx = fontHostPx * 1.3;
+    const itemTotalHeightPx = refHostHeightPx + refGapPx + blockHeightPx;
+
+    const totalRows = Math.ceil(state.dataset.length / gridCols);
+
+    // Calculate Required Sheet Dimensions dynamically based on content
+    const totalItemHeightMm = itemTotalHeightPx / MM_TO_PX;
+    const requiredHeightMm = (pageMarginMm * 2) + (totalRows * totalItemHeightMm) + Math.max(0, totalRows - 1) * rowGapMm;
+
+    let sheetWidthMm = 210;
+    let baseHeightMm = 297;
+
+    if (state.config.pageSize === 'Letter') {
+      sheetWidthMm = 215.9;
+      baseHeightMm = 279.4;
+    } else if (state.config.pageSize === 'Continuous') {
+      sheetWidthMm = (pageMarginMm * 2) + (gridCols * blockWidthMm) + Math.max(0, gridCols - 1) * colGapMm;
+      baseHeightMm = 0;
+    }
+
+    // Dynamic height ensures ALL stickers fit inside SVG without bottom truncation
+    const sheetHeightMm = Math.max(baseHeightMm, Math.ceil(requiredHeightMm));
+
+    const sheetWidthPx = sheetWidthMm * MM_TO_PX;
+    const sheetHeightPx = sheetHeightMm * MM_TO_PX;
+
+    // Border attribute helper
+    let borderAttr = 'stroke="#0f172a" stroke-width="1.5" rx="6" ry="6"';
+    if (state.config.borderStyle === 'solid-thin') {
+      borderAttr = 'stroke="#0f172a" stroke-width="1"';
+    } else if (state.config.borderStyle === 'solid-thick') {
+      borderAttr = 'stroke="#0f172a" stroke-width="2"';
+    } else if (state.config.borderStyle === 'dashed') {
+      borderAttr = 'stroke="#0f172a" stroke-width="1.5" stroke-dasharray="4 3"';
+    } else if (state.config.borderStyle === 'none') {
+      borderAttr = 'stroke="none"';
+    }
+
+    // Text Anchor calculation
+    const textAlign = state.config.textAlign;
+    let textAnchor = 'middle';
+    if (textAlign === 'left') textAnchor = 'start';
+    if (textAlign === 'right') textAnchor = 'end';
+
+    let itemsSvg = '';
+
+    state.dataset.forEach((row, index) => {
+      const col = index % gridCols;
+      const r = Math.floor(index / gridCols);
+
+      const itemX = pageMarginPx + col * (blockWidthPx + colGapPx);
+      const itemY = pageMarginPx + r * (itemTotalHeightPx + rowGapPx);
+
+      const hostVal = state.mappings.host ? (row[state.mappings.host] || '') : '';
+      const assetVal = state.mappings.asset ? (row[state.mappings.asset] || '') : '';
+      const serialVal = state.mappings.serial ? (row[state.mappings.serial] || '') : '';
+
+      const pHost = state.config.prefixHost ? (state.config.prefixHost.endsWith(' ') ? state.config.prefixHost : state.config.prefixHost + ' ') : '';
+      const pSerial = state.config.prefixSerial ? (state.config.prefixSerial.endsWith(' ') ? state.config.prefixSerial : state.config.prefixSerial + ' ') : '';
+
+      const hostText = pHost + hostVal;
+      const serialText = pSerial + serialVal;
+
+      // 1. Ref Host Text (above block)
+      let refTextX = itemX + blockWidthPx / 2;
+      if (textAlign === 'left') refTextX = itemX;
+      if (textAlign === 'right') refTextX = itemX + blockWidthPx;
+
+      const refHostY = itemY + fontHostPx;
+
+      let itemMarkup = `
+    <!-- Sticker Item ${index + 1} -->
+    <g class="sticker-item" id="sticker-item-${index + 1}">
+      <text x="${refTextX.toFixed(2)}" y="${refHostY.toFixed(2)}" text-anchor="${textAnchor}" font-size="${fontHostPx}px" class="sticker-ref-text">${escapeXML(hostText)}</text>`;
+
+      // 2. Sticker Block Rect
+      const blockY = itemY + refHostHeightPx + refGapPx;
+
+      itemMarkup += `
+      <rect x="${itemX.toFixed(2)}" y="${blockY.toFixed(2)}" width="${blockWidthPx.toFixed(2)}" height="${blockHeightPx.toFixed(2)}" fill="#ffffff" ${borderAttr} />`;
+
+      // 3. Cut Marks if enabled
+      if (state.showCutMarks) {
+        const markLen = 6;
+        const x1 = itemX;
+        const x2 = itemX + blockWidthPx;
+        const y1 = blockY;
+        const y2 = blockY + blockHeightPx;
+
+        itemMarkup += `
+      <!-- Cut Marks -->
+      <g class="cut-marks" stroke="#94a3b8" stroke-width="0.75" stroke-dasharray="2 2">
+        <line x1="${(x1 - markLen).toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x1.toFixed(2)}" y2="${y1.toFixed(2)}" />
+        <line x1="${x1.toFixed(2)}" y1="${(y1 - markLen).toFixed(2)}" x2="${x1.toFixed(2)}" y2="${y1.toFixed(2)}" />
+        <line x1="${x2.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${(x2 + markLen).toFixed(2)}" y2="${y1.toFixed(2)}" />
+        <line x1="${x2.toFixed(2)}" y1="${(y1 - markLen).toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y1.toFixed(2)}" />
+        <line x1="${(x1 - markLen).toFixed(2)}" y1="${y2.toFixed(2)}" x2="${x1.toFixed(2)}" y2="${y2.toFixed(2)}" />
+        <line x1="${x1.toFixed(2)}" y1="${y2.toFixed(2)}" x2="${x1.toFixed(2)}" y2="${(y2 + markLen).toFixed(2)}" />
+        <line x1="${(x2 + markLen).toFixed(2)}" y1="${y2.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}" />
+        <line x1="${x2.toFixed(2)}" y1="${y2.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${(y2 + markLen).toFixed(2)}" />
+      </g>`;
+      }
+
+      // 4. Content inside block
+      let contentX = itemX + blockWidthPx / 2;
+      if (textAlign === 'left') contentX = itemX + blockPaddingPx + 6;
+      if (textAlign === 'right') contentX = itemX + blockWidthPx - blockPaddingPx - 6;
+
+      const hasBarcode = state.config.barcodeToggle !== 'none' && window.JsBarcode;
+      const barcodeVal = (state.config.barcodeToggle === 'asset') ? assetVal : (state.config.barcodeToggle === 'serial' ? serialVal : '');
+
+      let assetY = blockY + blockPaddingPx + fontAssetPx + 2;
+      let serialY = assetY + fontSerialPx + 4;
+
+      if (hasBarcode && barcodeVal) {
+        assetY = blockY + blockPaddingPx + fontAssetPx + 1;
+        serialY = assetY + fontSerialPx + 2;
+      }
+
+      itemMarkup += `
+      <text x="${contentX.toFixed(2)}" y="${assetY.toFixed(2)}" text-anchor="${textAnchor}" font-size="${fontAssetPx}px" class="sticker-asset-text">${escapeXML(assetVal)}</text>
+      <text x="${contentX.toFixed(2)}" y="${serialY.toFixed(2)}" text-anchor="${textAnchor}" font-size="${fontSerialPx}px" class="sticker-serial-text">${escapeXML(serialText)}</text>`;
+
+      // 5. Barcode SVG if enabled
+      if (hasBarcode && barcodeVal) {
+        try {
+          const tempSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          JsBarcode(tempSvg, barcodeVal, {
+            format: 'CODE128',
+            displayValue: false,
+            height: 20,
+            margin: 0
+          });
+
+          const rawBcWidth = parseFloat(tempSvg.getAttribute('width')) || 100;
+          const rawBcHeight = parseFloat(tempSvg.getAttribute('height')) || 20;
+
+          const maxBcWidth = blockWidthPx * 0.85;
+          const maxBcHeight = Math.max(10, blockHeightPx - (serialY - blockY) - blockPaddingPx - 4);
+          
+          const scaleX = Math.min(1.2, maxBcWidth / rawBcWidth);
+          const scaleY = Math.min(1, maxBcHeight / rawBcHeight);
+          const scale = Math.min(scaleX, scaleY);
+
+          const bcScaledWidth = rawBcWidth * scale;
+          const bcScaledHeight = rawBcHeight * scale;
+
+          let bcX = itemX + (blockWidthPx - bcScaledWidth) / 2;
+          if (textAlign === 'left') bcX = itemX + blockPaddingPx + 4;
+          if (textAlign === 'right') bcX = itemX + blockWidthPx - bcScaledWidth - blockPaddingPx - 4;
+
+          const bcY = blockY + blockHeightPx - bcScaledHeight - blockPaddingPx - 2;
+
+          const bcGroupContent = tempSvg.innerHTML;
+
+          itemMarkup += `
+      <!-- Barcode Vector -->
+      <g transform="translate(${bcX.toFixed(2)}, ${bcY.toFixed(2)}) scale(${scale.toFixed(4)})" class="sticker-barcode">
+        ${bcGroupContent}
+      </g>`;
+        } catch (err) {
+          console.warn('SVG Barcode render warning:', err);
+        }
+      }
+
+      itemMarkup += `
+    </g>`;
+
+      itemsSvg += itemMarkup;
+    });
+
+    // Assemble Full Sheet SVG Document
+    return `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${sheetWidthMm}mm" height="${sheetHeightMm}mm" viewBox="0 0 ${sheetWidthPx.toFixed(2)} ${sheetHeightPx.toFixed(2)}">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600;700&amp;display=swap');
+      .sticker-ref-text {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        font-weight: 500;
+        fill: #475569;
+      }
+      .sticker-asset-text {
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 700;
+        fill: #0f172a;
+      }
+      .sticker-serial-text {
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 600;
+        fill: #0f172a;
+      }
+    </style>
+  </defs>
+  <rect width="100%" height="100%" fill="#ffffff" />
+  ${itemsSvg}
+</svg>`;
+  }
+
+  // Standalone Single Sticker SVG
+  function generateSingleStickerSVG(index) {
+    if (!state.dataset || !state.dataset[index]) return '';
+
+    const row = state.dataset[index];
+    const MM_TO_PX = 3.7795275591;
+
+    const blockWidthMm = state.config.blockWidth;
+    const blockHeightMm = state.config.blockHeight;
+
+    const fontHostPx = state.config.fontHost;
+    const fontAssetPx = state.config.fontAsset;
+    const fontSerialPx = state.config.fontSerial;
+    const refGapPx = state.config.refGap;
+    const blockPaddingPx = state.config.blockPadding;
+
+    const blockWidthPx = blockWidthMm * MM_TO_PX;
+    const blockHeightPx = blockHeightMm * MM_TO_PX;
+
+    const refHostHeightPx = fontHostPx * 1.3;
+    const itemTotalHeightPx = refHostHeightPx + refGapPx + blockHeightPx;
+
+    const paddingPx = 8;
+    const svgWidthPx = blockWidthPx + (paddingPx * 2);
+    const svgHeightPx = itemTotalHeightPx + (paddingPx * 2);
+
+    const svgWidthMm = (svgWidthPx / MM_TO_PX).toFixed(2);
+    const svgHeightMm = (svgHeightPx / MM_TO_PX).toFixed(2);
+
+    const itemX = paddingPx;
+    const itemY = paddingPx;
+
+    const hostVal = state.mappings.host ? (row[state.mappings.host] || '') : '';
+    const assetVal = state.mappings.asset ? (row[state.mappings.asset] || '') : '';
+    const serialVal = state.mappings.serial ? (row[state.mappings.serial] || '') : '';
+
+    const pHost = state.config.prefixHost ? (state.config.prefixHost.endsWith(' ') ? state.config.prefixHost : state.config.prefixHost + ' ') : '';
+    const pSerial = state.config.prefixSerial ? (state.config.prefixSerial.endsWith(' ') ? state.config.prefixSerial : state.config.prefixSerial + ' ') : '';
+
+    const hostText = pHost + hostVal;
+    const serialText = pSerial + serialVal;
+
+    let borderAttr = 'stroke="#0f172a" stroke-width="1.5" rx="6" ry="6"';
+    if (state.config.borderStyle === 'solid-thin') {
+      borderAttr = 'stroke="#0f172a" stroke-width="1"';
+    } else if (state.config.borderStyle === 'solid-thick') {
+      borderAttr = 'stroke="#0f172a" stroke-width="2"';
+    } else if (state.config.borderStyle === 'dashed') {
+      borderAttr = 'stroke="#0f172a" stroke-width="1.5" stroke-dasharray="4 3"';
+    } else if (state.config.borderStyle === 'none') {
+      borderAttr = 'stroke="none"';
+    }
+
+    const textAlign = state.config.textAlign;
+    let textAnchor = 'middle';
+    if (textAlign === 'left') textAnchor = 'start';
+    if (textAlign === 'right') textAnchor = 'end';
+
+    let refTextX = itemX + blockWidthPx / 2;
+    if (textAlign === 'left') refTextX = itemX;
+    if (textAlign === 'right') refTextX = itemX + blockWidthPx;
+
+    const refHostY = itemY + fontHostPx;
+    const blockY = itemY + refHostHeightPx + refGapPx;
+
+    let contentX = itemX + blockWidthPx / 2;
+    if (textAlign === 'left') contentX = itemX + blockPaddingPx + 6;
+    if (textAlign === 'right') contentX = itemX + blockWidthPx - blockPaddingPx - 6;
+
+    const hasBarcode = state.config.barcodeToggle !== 'none' && window.JsBarcode;
+    const barcodeVal = (state.config.barcodeToggle === 'asset') ? assetVal : (state.config.barcodeToggle === 'serial' ? serialVal : '');
+
+    let assetY = blockY + blockPaddingPx + fontAssetPx + 2;
+    let serialY = assetY + fontSerialPx + 4;
+
+    if (hasBarcode && barcodeVal) {
+      assetY = blockY + blockPaddingPx + fontAssetPx + 1;
+      serialY = assetY + fontSerialPx + 2;
+    }
+
+    let barcodeMarkup = '';
+    if (hasBarcode && barcodeVal) {
+      try {
+        const tempSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        JsBarcode(tempSvg, barcodeVal, {
+          format: 'CODE128',
+          displayValue: false,
+          height: 20,
+          margin: 0
+        });
+
+        const rawBcWidth = parseFloat(tempSvg.getAttribute('width')) || 100;
+        const rawBcHeight = parseFloat(tempSvg.getAttribute('height')) || 20;
+
+        const maxBcWidth = blockWidthPx * 0.85;
+        const maxBcHeight = Math.max(10, blockHeightPx - (serialY - blockY) - blockPaddingPx - 4);
+        
+        const scaleX = Math.min(1.2, maxBcWidth / rawBcWidth);
+        const scaleY = Math.min(1, maxBcHeight / rawBcHeight);
+        const scale = Math.min(scaleX, scaleY);
+
+        const bcScaledWidth = rawBcWidth * scale;
+        const bcScaledHeight = rawBcHeight * scale;
+
+        let bcX = itemX + (blockWidthPx - bcScaledWidth) / 2;
+        if (textAlign === 'left') bcX = itemX + blockPaddingPx + 4;
+        if (textAlign === 'right') bcX = itemX + blockWidthPx - bcScaledWidth - blockPaddingPx - 4;
+
+        const bcY = blockY + blockHeightPx - bcScaledHeight - blockPaddingPx - 2;
+
+        barcodeMarkup = `
+    <!-- Barcode Vector -->
+    <g transform="translate(${bcX.toFixed(2)}, ${bcY.toFixed(2)}) scale(${scale.toFixed(4)})" class="sticker-barcode">
+      ${tempSvg.innerHTML}
+    </g>`;
+      } catch (err) {
+        console.warn('SVG Single Barcode render warning:', err);
+      }
+    }
+
+    return `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${svgWidthMm}mm" height="${svgHeightMm}mm" viewBox="0 0 ${svgWidthPx.toFixed(2)} ${svgHeightPx.toFixed(2)}">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600;700&amp;display=swap');
+      .sticker-ref-text {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        font-weight: 500;
+        fill: #475569;
+      }
+      .sticker-asset-text {
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 700;
+        fill: #0f172a;
+      }
+      .sticker-serial-text {
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 600;
+        fill: #0f172a;
+      }
+    </style>
+  </defs>
+  <rect width="100%" height="100%" fill="#ffffff" />
+  <g class="sticker-item">
+    <text x="${refTextX.toFixed(2)}" y="${refHostY.toFixed(2)}" text-anchor="${textAnchor}" font-size="${fontHostPx}px" class="sticker-ref-text">${escapeXML(hostText)}</text>
+    <rect x="${itemX.toFixed(2)}" y="${blockY.toFixed(2)}" width="${blockWidthPx.toFixed(2)}" height="${blockHeightPx.toFixed(2)}" fill="#ffffff" ${borderAttr} />
+    <text x="${contentX.toFixed(2)}" y="${assetY.toFixed(2)}" text-anchor="${textAnchor}" font-size="${fontAssetPx}px" class="sticker-asset-text">${escapeXML(assetVal)}</text>
+    <text x="${contentX.toFixed(2)}" y="${serialY.toFixed(2)}" text-anchor="${textAnchor}" font-size="${fontSerialPx}px" class="sticker-serial-text">${escapeXML(serialText)}</text>
+    ${barcodeMarkup}
+  </g>
+</svg>`;
+  }
+
+  // Download / Save helper for SVG Sheet
+  function exportSheetAsSVG() {
+    const svgString = generateFullSheetSVG();
+    if (!svgString) {
+      alert('No stickers available to export.');
+      return;
+    }
+    const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+    const filename = `IT_Sticker_Sheet_${Date.now()}.svg`;
+    if (window.saveAs) {
+      window.saveAs(blob, filename);
+    } else {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }
+
+  // Export Zip of individual SVG files
+  async function exportStickersAsSVGZip() {
+    if (!window.JSZip || !window.saveAs) {
+      alert('JSZip or FileSaver library missing.');
+      return;
+    }
+    if (!state.dataset || state.dataset.length === 0) {
+      alert('No stickers to export.');
+      return;
+    }
+
+    const zip = new JSZip();
+    const folder = zip.folder('Asset_Stickers_SVG');
+
+    state.dataset.forEach((row, i) => {
+      const svgContent = generateSingleStickerSVG(i);
+      const assetVal = state.mappings.asset ? (row[state.mappings.asset] || `sticker_${i+1}`) : `sticker_${i+1}`;
+      const cleanName = assetVal.replace(/[^a-zA-Z0-9_-]/g, '_');
+      folder.file(`${cleanName}.svg`, svgContent);
+    });
+
+    try {
+      const content = await zip.generateAsync({ type: 'blob' });
+      saveAs(content, `IT_Asset_Stickers_SVG_${Date.now()}.zip`);
+    } catch (err) {
+      console.error('ZIP SVG export error:', err);
+      alert('Failed to generate ZIP of SVG stickers.');
+    }
+  }
+
+  // ==========================================
+  // Modal & Export Event Bindings
   // ==========================================
   function bindModalEvents() {
     const dataModal = document.getElementById('data-modal');
@@ -509,33 +951,65 @@ document.addEventListener('DOMContentLoaded', () => {
       dataModal.classList.remove('active');
     });
 
-    const btnExpPng = document.getElementById('btn-export-png');
-    if (btnExpPng) {
-      btnExpPng.addEventListener('click', () => {
+    const btnExportSvg = document.getElementById('btn-export-svg');
+    if (btnExportSvg) {
+      btnExportSvg.addEventListener('click', () => {
+        exportSheetAsSVG();
+      });
+    }
+
+    const btnExportTrigger = document.getElementById('btn-export-modal-trigger');
+    if (btnExportTrigger) {
+      btnExportTrigger.addEventListener('click', () => {
         exportModal.classList.add('active');
       });
     }
+
     document.getElementById('btn-close-export-modal').addEventListener('click', () => {
       exportModal.classList.remove('active');
     });
 
     // Close modals when clicking outside
     [dataModal, exportModal].forEach(modal => {
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.classList.remove('active');
+      if (modal) {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) modal.classList.remove('active');
+        });
+      }
+    });
+
+    // Export Options inside Modal
+    const btnExpSheetSvg = document.getElementById('btn-exp-sheet-svg');
+    if (btnExpSheetSvg) {
+      btnExpSheetSvg.addEventListener('click', () => {
+        exportModal.classList.remove('active');
+        exportSheetAsSVG();
       });
-    });
+    }
 
-    // Export Options
-    document.getElementById('btn-exp-sheet-png').addEventListener('click', () => {
-      exportModal.classList.remove('active');
-      exportSheetAsPNG();
-    });
+    const btnExpZipSvg = document.getElementById('btn-exp-zip-svg');
+    if (btnExpZipSvg) {
+      btnExpZipSvg.addEventListener('click', () => {
+        exportModal.classList.remove('active');
+        exportStickersAsSVGZip();
+      });
+    }
 
-    document.getElementById('btn-exp-zip-png').addEventListener('click', () => {
-      exportModal.classList.remove('active');
-      exportStickersAsZip();
-    });
+    const btnExpSheetPng = document.getElementById('btn-exp-sheet-png');
+    if (btnExpSheetPng) {
+      btnExpSheetPng.addEventListener('click', () => {
+        exportModal.classList.remove('active');
+        exportSheetAsPNG();
+      });
+    }
+
+    const btnExpZipPng = document.getElementById('btn-exp-zip-png');
+    if (btnExpZipPng) {
+      btnExpZipPng.addEventListener('click', () => {
+        exportModal.classList.remove('active');
+        exportStickersAsZip();
+      });
+    }
   }
 
   // Render Data Table in Modal
@@ -607,10 +1081,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Show quick progress feedback
-    const btnExp = document.getElementById('btn-export-png');
-    const originalText = btnExp.innerHTML;
-    btnExp.innerHTML = `<i class="ri-loader-4-line ri-spin"></i> Zipping ${stickerItems.length} Stickers...`;
-    btnExp.disabled = true;
+    const btnExp = document.getElementById('btn-exp-zip-png');
+    let originalText = '';
+    if (btnExp) {
+      originalText = btnExp.innerHTML;
+      btnExp.innerHTML = `<i class="ri-loader-4-line ri-spin"></i> Zipping ${stickerItems.length} Stickers...`;
+      btnExp.disabled = true;
+    }
 
     try {
       for (let i = 0; i < stickerItems.length; i++) {
@@ -635,8 +1112,10 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('ZIP generation error:', err);
       alert('Error generating ZIP file.');
     } finally {
-      btnExp.innerHTML = originalText;
-      btnExp.disabled = false;
+      if (btnExp) {
+        btnExp.innerHTML = originalText;
+        btnExp.disabled = false;
+      }
     }
   }
 
